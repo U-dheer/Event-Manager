@@ -96,3 +96,16 @@ Nest is an MIT-licensed open source project. It can grow thanks to the sponsors 
 ## License
 
 Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+
+## Environment variables
+
+This project uses `@nestjs/config` and expects sensitive configuration (DB credentials, API keys) to be stored in an `.env` file which should NOT be committed to version control.
+
+Create your local `.env` from the example before starting the app:
+
+```bash
+cp .env.example .env
+# then edit .env to fit your environment
+```
+
+The `.env` file is already ignored by `.gitignore`.

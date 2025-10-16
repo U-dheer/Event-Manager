@@ -7,36 +7,38 @@ import { EventsModule } from './events/events.module';
 import { AppJapanService } from './app.japan.service';
 import { AppDummy } from './events/app.dummy';
 import { ConfigModule } from '@nestjs/config';
+import ormConfig from './config/orm.config';
+import ormConfigProd from './config/orm.config prod';
 
 @Module({
   imports: [
-    ConfigModule.forRoot(),
-    TypeOrmModule.forRoot({
-      type: 'mysql',
-      host: '127.0.0.1',
-      port:  3306,
-      username: 'root',
-      password: 'example',
-      database: 'nest-events',
-      entities: [Event],
-      synchronize: true,
+    ConfigModule.forRoot({
+      isGlobal: true,
+      load: [ormConfig],
+      expandVariables: true,
     }),
+    TypeOrmModule.forRootAsync({
+      useFactory:
+        process.env.NODE_ENV !== 'production' ? ormConfig : ormConfigProd,
+    }),
+    TypeOrmModule.forFeature([Event]),
     EventsModule,
   ],
   controllers: [AppController],
-  providers: [{
-    provide:AppService,
-    useClass:AppJapanService
-  },
-{
-  provide:"APP_NAME",
-  useValue:"My NestJS Application"
-},
-{
-  provide:"MESSAGE",
-  inject:[AppDummy],
-  useFactory:(app)=>`${app.dummy()} - Factory Message`
-}],
+  providers: [
+    {
+      provide: AppService,
+      useClass: AppJapanService,
+    },
+    {
+      provide: 'APP_NAME',
+      useValue: 'My NestJS Application',
+    },
+    {
+      provide: 'MESSAGE',
+      inject: [AppDummy],
+      useFactory: (app) => `${app.dummy()} - Factory Message`,
+    },
+  ],
 })
 export class AppModule {}
- 
