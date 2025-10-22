@@ -1,11 +1,6 @@
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { Attendee } from './attendee.entity';
-
-export enum AttendeeAnswerEnum {
-  Accepted = 1,
-  Maybe,
-  Rejected,
-}
+import { AttendeeAnswerEnum } from './attendee-answer.enum';
 
 @Entity()
 export class Event {
@@ -28,4 +23,7 @@ export class Event {
   attendees: Attendee[];
 
   attendeeCount?: number;
+  attendeeRejected?: number;
+  attendeeMaybe?: number;
+  attendeeAccepted?: number;
 }

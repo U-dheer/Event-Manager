@@ -5,6 +5,7 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+import { AttendeeAnswerEnum } from './attendee-answer.enum';
 import { Event } from './event.entity';
 
 @Entity()
@@ -20,4 +21,10 @@ export class Attendee {
   })
   @JoinColumn()
   event: Event;
+
+  @Column('enum', {
+    enum: AttendeeAnswerEnum,
+    default: AttendeeAnswerEnum.Accepted,
+  })
+  answer: AttendeeAnswerEnum;
 }
