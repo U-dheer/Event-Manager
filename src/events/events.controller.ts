@@ -8,13 +8,15 @@ import {
   Param,
   Patch,
   Post,
-  Put,
   BadRequestException,
   ParseIntPipe,
   ValidationPipe,
   Logger,
   Inject,
   Query,
+  UsePipes,
+  UseGuards,
+  ForbiddenException,
 } from '@nestjs/common';
 import { CreateEventDto } from './input/create-event.dto';
 import { UpdateEventDto } from './input/update-event.dto';
@@ -24,7 +26,9 @@ import { In, Like, MoreThan, Repository } from 'typeorm';
 import { Attendee } from './attendee.entity';
 import { EventsService } from './events.service';
 import { ListEvnets } from './input/list-events';
-import { filter } from 'rxjs';
+import { CurrentUser } from 'src/auth/current-user.decorator';
+import { User } from 'src/auth/user.entity';
+import { AuthGurdJwt } from 'src/auth/auth-guard.jwt';
 
 @Controller('/events')
 export class EventsController {
@@ -39,11 +43,13 @@ export class EventsController {
   ) {}
 
   @Get()
+  @UsePipes(new ValidationPipe({ transform: true }))
   async findAll(@Query() filter: ListEvnets) {
-    this.logger.log('Fetching all events');
     const events =
-      await this.eventsService.getEventsWithAttendeeCountFiltered(filter);
-    this.logger.debug(`Found ${events.length} events`);
+      await this.eventsService.getEventsWithAttendeeCountFilteredPaginated(
+        filter,
+        { total: 1, currentPage: filter.page, limit: 2 },
+      );
     return events;
   }
 
@@ -95,22 +101,33 @@ export class EventsController {
   }
 
   @Post()
-  async create(@Body() input: CreateEventDto) {
-    return await this.repository.save({
-      ...input,
-      when: new Date(input.when),
-    });
+  @UseGuards(AuthGurdJwt)
+  async create(@Body() input: CreateEventDto, @CurrentUser() user: User) {
+    return await this.eventsService.createEvent(input, user);
   }
 
   @Patch(':id')
-  async update(@Param('id') id: string, @Body() input: UpdateEventDto) {
+  @UseGuards(AuthGurdJwt)
+  async update(
+    @Param('id') id: string,
+    @Body() input: UpdateEventDto,
+    @CurrentUser() user: User,
+  ) {
     const numericId = Number(id);
     if (!Number.isInteger(numericId) || numericId <= 0) {
       throw new BadRequestException(`Invalid id parameter: ${id}`);
     }
     const event = await this.repository.findOneBy({ id: numericId });
+
     if (!event) {
       throw new NotFoundException(`Event with id ${id} not found`);
+    }
+
+    if (event.organizerId !== user.id) {
+      throw new ForbiddenException(
+        null,
+        `You are not allowed to update this event`,
+      );
     }
 
     return await this.repository.save({
@@ -121,16 +138,20 @@ export class EventsController {
   }
 
   @Delete(':id')
+  @UseGuards(AuthGurdJwt)
   @HttpCode(204)
-  async remove(@Param('id') id: string) {
-    const numericId = Number(id);
-    if (!Number.isInteger(numericId) || numericId <= 0) {
-      throw new BadRequestException(`Invalid id parameter: ${id}`);
-    }
-    const event = await this.repository.findOneBy({ id: numericId });
-    if (!event) {
+  async remove(@Param('id') id: string, @CurrentUser() user: User) {
+    const events = await this.repository.findOneBy({ id: Number(id) });
+    if (!events) {
       throw new NotFoundException(`Event with id ${id} not found`);
     }
-    await this.repository.remove(event);
+
+    if (events.organizerId !== user.id) {
+      throw new ForbiddenException(
+        null,
+        `You are not allowed to delete this event`,
+      );
+    }
+    await this.eventsService.deleteEvent(Number(id));
   }
 }

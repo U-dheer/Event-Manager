@@ -4,6 +4,10 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { AttendeeAnswerEnum } from './attendee-answer.enum';
 import { ListEvnets, WhenEventFilter } from './input/list-events';
+import { paginate, PaginateOptions } from 'src/pagination/paginator';
+import { DeleteResult } from 'typeorm/browser';
+import { CreateEventDto } from './input/create-event.dto';
+import { User } from 'src/auth/user.entity';
 
 @Injectable()
 export class EventsService {
@@ -56,11 +60,19 @@ export class EventsService {
     return await query.getOne();
   }
 
-  public async getEventsWithAttendeeCountFiltered(filter?: ListEvnets) {
+  public async createEvent(input: CreateEventDto, user: User): Promise<Event> {
+    return await this.eventRepository.save({
+      ...input,
+      organizer: user,
+      when: new Date(input.when),
+    });
+  }
+
+  private async getEventsWithAttendeeCountFiltered(filter?: ListEvnets) {
     let query = this.getEventsWithAttendeesCountQuery();
 
     if (!filter) {
-      return query.getMany();
+      return query;
     }
 
     if (filter.when) {
@@ -93,6 +105,24 @@ export class EventsService {
       }
     }
 
-    return await query.getMany();
+    return query;
+  }
+
+  public async getEventsWithAttendeeCountFilteredPaginated(
+    filter?: ListEvnets,
+    paginateOptions?: PaginateOptions,
+  ) {
+    return await paginate(
+      await this.getEventsWithAttendeeCountFiltered(filter),
+      paginateOptions,
+    );
+  }
+
+  public async deleteEvent(id: number): Promise<DeleteResult> {
+    return await this.eventRepository
+      .createQueryBuilder('e')
+      .delete()
+      .where('id=:id', { id })
+      .execute();
   }
 }
