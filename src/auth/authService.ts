@@ -7,7 +7,7 @@ import * as bcrypt from 'bcrypt';
 export class AuthService {
   constructor(private readonly jwtService: JwtService) {}
 
-  public getTokenForUser(user: User): String {
+  public getTokenForUser(user: User): string {
     return this.jwtService.sign({
       username: user.username,
       sub: user.id,

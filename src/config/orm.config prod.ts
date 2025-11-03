@@ -12,6 +12,6 @@ export default registerAs(
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
     entities: [Event],
-    synchronize: false
+    synchronize: false,
   }),
 );

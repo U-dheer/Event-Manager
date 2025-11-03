@@ -11,7 +11,6 @@ export class AppJapanService {
 
   getHello(): string {
     console.log(process.env.DB_HOST);
-    return `こんにちは、${this.name}, ${this.message}`;  
+    return `こんにちは、${this.name}, ${this.message}`;
   }
 }
-  
