@@ -1,5 +1,5 @@
 export enum AttendeeAnswerEnum {
-  Accepted = 1,
-  Maybe,
-  Rejected,
+  Accepted = 'Accepted',
+  Maybe = 'Maybe',
+  Rejected = 'Rejected',
 }

@@ -7,12 +7,16 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { Attendee } from './attendee.entity';
-import { User } from 'src/auth/user.entity';
+import { User } from './../auth/user.entity';
 import { Expose } from 'class-transformer';
-import { PaginatedResult } from '../../src/pagination/paginator';
+import { PaginatedResult } from './../pagination/paginator';
 
 @Entity()
 export class Event {
+  constructor(partial?: Partial<Event>) {
+    Object.assign(this, partial);
+  }
+
   @PrimaryGeneratedColumn()
   @Expose()
   id: number;
@@ -33,7 +37,7 @@ export class Event {
   @Expose()
   address: string;
 
-  @OneToMany(() => Attendee, (attendee) => attendee.event) //the first function is to demonstrate the target entity, the second function is to demonstrate the inverse side of the relation
+  @OneToMany(() => Attendee, (attendee) => attendee.event, { cascade: true }) //the first function is to demonstrate the target entity, the second function is to demonstrate the inverse side of the relation
   @Expose()
   attendees: Attendee[];
 

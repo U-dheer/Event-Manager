@@ -8,7 +8,7 @@ import {
 import { AttendeeAnswerEnum } from './attendee-answer.enum';
 import { Event } from './event.entity';
 import { Expose } from 'class-transformer';
-import { User } from 'src/auth/user.entity';
+import { User } from '.././auth/user.entity';
 
 @Entity()
 export class Attendee {
@@ -16,12 +16,9 @@ export class Attendee {
   @Expose()
   id: number;
 
-  @Expose()
-  @Column()
-  name: string;
-
   @ManyToOne(() => Event, (event) => event.attendees, {
     nullable: false,
+    onDelete: 'CASCADE',
   })
   @JoinColumn()
   event: Event;
@@ -37,6 +34,7 @@ export class Attendee {
   answer: AttendeeAnswerEnum;
 
   @ManyToOne(() => User, (user) => user.attended)
+  @Expose()
   user: User;
 
   @Column()
